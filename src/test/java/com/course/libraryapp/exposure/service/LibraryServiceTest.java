@@ -26,7 +26,7 @@ class LibraryServiceTest {
     private LibraryService libraryService;
 
     @BeforeEach
-    public void reset() {
+    public void setup() {
         libraryService = new LibraryService();
         library.forEach(book -> book.setScore(0.0));
         library.forEach(book -> book.getScoreRegistry().clear());

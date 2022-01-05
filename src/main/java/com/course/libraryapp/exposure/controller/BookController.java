@@ -45,8 +45,9 @@ public class BookController {
     }
 
     @GetMapping("/books")
-    public List<Book> getBooks() {
-        return libraryService.getAllBooks();
+    public ResponseEntity<Object> getBooks() {
+        List<Book> allBooks = libraryService.getAllBooks();
+        return new ResponseEntity<>(allBooks, HttpStatus.OK);
     }
 
 
@@ -72,19 +73,34 @@ public class BookController {
     }
 
     @GetMapping("/books/by-genre")
-    public List<Book> getBooksByGenre(@RequestParam("genre") String genre) {
-        return libraryService.getBooksByGenre(genre);
+    public ResponseEntity<Object> getBooksByGenre(@RequestParam("genre") String genre) {
+        List<Book> booksByGenre = libraryService.getBooksByGenre(genre);
+        return new ResponseEntity<>(booksByGenre, HttpStatus.OK);
     }
 
     @GetMapping("/books/sorted-by-{param}")
-    public List<Book> getBooksSortedBy(@PathVariable String param) {
-        return switch (param) {
-            case "author" -> libraryService.sortBooksByAuthor();
-            case "title" -> libraryService.sortBooksByTitle();
-            case "score-ascending" -> libraryService.sortBooksByScoreAscending();
-            case "score-descending" -> libraryService.sortBooksByScoreDescending();
-            default -> null;
-        };
+    public ResponseEntity<Object> getBooksSortedBy(@PathVariable String param) {
+        switch (param) {
+            case "author" -> {
+                List<Book> booksByAuthor = libraryService.sortBooksByAuthor();
+                return new ResponseEntity<>(booksByAuthor, HttpStatus.OK);
+            }
+            case "title" -> {
+                List<Book> booksByTitle = libraryService.sortBooksByTitle();
+                return new ResponseEntity<>(booksByTitle, HttpStatus.OK);
+            }
+            case "score-ascending" -> {
+                List<Book> booksByScoreAscending = libraryService.sortBooksByScoreAscending();
+                return new ResponseEntity<>(booksByScoreAscending, HttpStatus.OK);
+            }
+            case "score-descending" -> {
+                List<Book> booksByScoreDescending = libraryService.sortBooksByScoreDescending();
+                return new ResponseEntity<>(booksByScoreDescending, HttpStatus.OK);
+            }
+            default -> {
+                return null;
+            }
+        }
     }
 
     @GetMapping("/books/most-popular")
@@ -98,8 +114,9 @@ public class BookController {
     }
 
     @GetMapping("/books/sorted-by-score/{genre}")
-    public List<Book> getSortedScoreByGenre(@PathVariable String genre) {
-        return libraryService.getSortedScoreByGenre(genre);
+    public ResponseEntity<Object> getSortedScoreByGenre(@PathVariable String genre) {
+        List<Book> booksByScoreByGenre = libraryService.getSortedScoreByGenre(genre);
+        return new ResponseEntity<>(booksByScoreByGenre, HttpStatus.OK);
     }
 
     @GetMapping("/books/highest-rated")

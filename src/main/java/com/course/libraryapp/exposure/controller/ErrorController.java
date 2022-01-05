@@ -11,7 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 
 @RestControllerAdvice
-public class ErrorController extends ResponseEntityExceptionHandler {
+class ErrorController extends ResponseEntityExceptionHandler {
 
 
     @Override
