@@ -35,13 +35,13 @@ class LibraryServiceTest {
 
     @Test
     public void addBookToLibrary() {
-        Book book = libraryService.getBookByTitle("LOTR");
+        List<Book> book = libraryService.getBookByTitle("LOTR");
 
         assertAll(
                 () -> assertEquals(library.size(), libraryService.getAllBooks().size()),
-                () -> assertEquals(library.get(0).getTitle(), book.getTitle()),
-                () -> assertEquals(library.get(0).getAuthor(), book.getAuthor()),
-                () -> assertEquals(library.get(0).getDescription(), book.getDescription())
+                () -> assertEquals(library.get(0).getTitle(), book.get(0).getTitle()),
+                () -> assertEquals(library.get(0).getAuthor(), book.get(0).getAuthor()),
+                () -> assertEquals(library.get(0).getDescription(), book.get(0).getDescription())
         );
     }
 
@@ -62,8 +62,8 @@ class LibraryServiceTest {
 
         assertAll(
                 () -> assertEquals(7, libraryService.getAllBooks().size()),
-                () -> assertEquals(listOfBooks.get(0).getSignature(), libraryService.getBookByTitle("Two Towers").getSignature()),
-                () -> assertEquals(listOfBooks.get(1).getSignature(), libraryService.getBookByTitle("American Gods").getSignature())
+                () -> assertEquals(listOfBooks.get(0).getSignature(), libraryService.getBookByTitle("Two Towers").get(0).getSignature()),
+                () -> assertEquals(listOfBooks.get(1).getSignature(), libraryService.getBookByTitle("American Gods").get(0).getSignature())
         );
     }
 
@@ -116,12 +116,12 @@ class LibraryServiceTest {
 
     @Test
     public void getBooksByTitle() {
-        Book book = libraryService.getBookByTitle("Diune");
+        List<Book> book = libraryService.getBookByTitle("Diune");
 
         assertAll(
-                () -> assertEquals("Diune", book.getTitle()),
-                () -> assertEquals("Frank Herbert", book.getAuthor()),
-                () -> assertEquals("Story about a spice", book.getDescription())
+                () -> assertEquals("Diune", book.get(0).getTitle()),
+                () -> assertEquals("Frank Herbert", book.get(0).getAuthor()),
+                () -> assertEquals("Story about a spice", book.get(0).getDescription())
         );
     }
 
@@ -181,7 +181,7 @@ class LibraryServiceTest {
                 () -> assertEquals(1.0, sortedLibraryBooks.get(0).getScore()),
                 () -> assertEquals(2.0, sortedLibraryBooks.get(1).getScore()),
                 () -> assertEquals(3.0, sortedLibraryBooks.get(2).getScore()),
-                () -> assertEquals(4.5, sortedLibraryBooks.get(3).getScore()),
+                () -> assertEquals(4.33, sortedLibraryBooks.get(3).getScore()),
                 () -> assertEquals(5.0, sortedLibraryBooks.get(4).getScore())
         );
     }
@@ -193,7 +193,7 @@ class LibraryServiceTest {
 
         assertAll(
                 () -> assertEquals(5.0, sortedLibraryBooks.get(0).getScore()),
-                () -> assertEquals(4.5, sortedLibraryBooks.get(1).getScore()),
+                () -> assertEquals(4.33, sortedLibraryBooks.get(1).getScore()),
                 () -> assertEquals(3.0, sortedLibraryBooks.get(2).getScore()),
                 () -> assertEquals(2.0, sortedLibraryBooks.get(3).getScore()),
                 () -> assertEquals(1.0, sortedLibraryBooks.get(4).getScore())
@@ -203,9 +203,10 @@ class LibraryServiceTest {
     @Test
     public void getMostPopularBook() throws Exception {
         rateBooks();
-        Book mostPopularBook = libraryService.getMostPopularBook();
+        List<Book> mostPopularBook = libraryService.getMostPopularBook();
 
-        assertEquals("Good Omens", mostPopularBook.getTitle());
+        assertEquals("LOTR", mostPopularBook.get(0).getTitle());
+        assertEquals("Good Omens", mostPopularBook.get(1).getTitle());
     }
 
     @Test
@@ -229,7 +230,7 @@ class LibraryServiceTest {
         assertAll(
                 () -> assertEquals(3, sortedLibraryBooks.size()),
                 () -> assertEquals("LOTR", sortedLibraryBooks.get(0).getTitle()),
-                () -> assertEquals(4.5, sortedLibraryBooks.get(0).getScore()),
+                () -> assertEquals(4.33, sortedLibraryBooks.get(0).getScore()),
                 () -> assertEquals("Good Omens", sortedLibraryBooks.get(1).getTitle()),
                 () -> assertEquals(3.0, sortedLibraryBooks.get(1).getScore()),
                 () -> assertEquals("Stardust", sortedLibraryBooks.get(2).getTitle()),
@@ -240,11 +241,11 @@ class LibraryServiceTest {
     @Test
     public void getHighestRatedBook() throws Exception {
         rateBooks();
-        Book highestRatedBook = libraryService.getHighestRatedBook();
+        List<Book> highestRatedBooks = libraryService.getHighestRatedBook();
 
         assertAll(
-                () -> assertEquals(5.0, highestRatedBook.getScore()),
-                () -> assertEquals("State of terror", highestRatedBook.getTitle())
+                () -> assertEquals(5.0, highestRatedBooks.get(0).getScore()),
+                () -> assertEquals("State of terror", highestRatedBooks.get(0).getTitle())
         );
     }
 
@@ -277,6 +278,7 @@ class LibraryServiceTest {
     private void rateBooks() {
         libraryService.checkIdAndRateABook(1, 4);
         libraryService.checkIdAndRateABook(1, 5);
+        libraryService.checkIdAndRateABook(1, 4);
         libraryService.checkIdAndRateABook(2, 1);
         libraryService.checkIdAndRateABook(3, 5);
         libraryService.checkIdAndRateABook(4, 2);

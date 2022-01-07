@@ -65,8 +65,8 @@ public class BookController {
     @GetMapping("/books/by-title")
     public ResponseEntity<Object> getBookByTitle(@RequestParam("title") String title) {
         try {
-            Book book = libraryService.getBookByTitle(title);
-            return new ResponseEntity<>(book, HttpStatus.OK);
+            List<Book> booksByTitle = libraryService.getBookByTitle(title);
+            return new ResponseEntity<>(booksByTitle, HttpStatus.OK);
         } catch (Exception e) {
             return errorResponseEntity(HttpStatus.NOT_FOUND, e);
         }
@@ -106,8 +106,8 @@ public class BookController {
     @GetMapping("/books/most-popular")
     public ResponseEntity<Object> getMostPopularBook() {
         try {
-            Book book = libraryService.getMostPopularBook();
-            return new ResponseEntity<>(book, HttpStatus.OK);
+            List<Book> mostPopularBooks = libraryService.getMostPopularBook();
+            return new ResponseEntity<>(mostPopularBooks, HttpStatus.OK);
         } catch (Exception e) {
             return errorResponseEntity(HttpStatus.NO_CONTENT, e);
         }
@@ -122,8 +122,8 @@ public class BookController {
     @GetMapping("/books/highest-rated")
     public ResponseEntity<Object> getHighestRatedBook() {
         try {
-            Book book = libraryService.getHighestRatedBook();
-            return new ResponseEntity<>(book, HttpStatus.OK);
+            List<Book> highestRateBooks = libraryService.getHighestRatedBook();
+            return new ResponseEntity<>(highestRateBooks, HttpStatus.OK);
         } catch (Exception e) {
             return errorResponseEntity(HttpStatus.NO_CONTENT, e);
         }

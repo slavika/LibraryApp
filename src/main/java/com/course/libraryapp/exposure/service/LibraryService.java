@@ -43,9 +43,9 @@ public class LibraryService {
     }
 
     public Book checkIdAndUpdateBook(int bookId, Book newBook) {
-        Book book = getBookById(bookId);
+        Book bookToBeUpdated = getBookById(bookId);
         newBook.setId(bookId);
-        this.books.set(books.indexOf(book), newBook);
+        this.books.set(books.indexOf(bookToBeUpdated), newBook);
         return this.books.get(books.indexOf(newBook));
     }
 
@@ -53,12 +53,12 @@ public class LibraryService {
         return this.books;
     }
 
-    public Book getBookByTitle(String title) {
-        Optional<Book> optionalBook = getBookPredicate(book -> book.getTitle().equals(title)).findAny();
-        if (optionalBook.isPresent()) {
-            return optionalBook.get();
-        } else {
+    public List<Book> getBookByTitle(String title) {
+        List<Book> listOfBooksByTitle = getBookPredicate(book -> book.getTitle().equalsIgnoreCase(title)).collect(Collectors.toList());
+        if (listOfBooksByTitle.isEmpty()) {
             throw new NoSuchElementException("No requested book with title " + title + " in a library.");
+        } else {
+            return listOfBooksByTitle;
         }
     }
 
@@ -72,7 +72,7 @@ public class LibraryService {
     }
 
     public List<Book> getBooksByGenre(String genre) {
-        return getBookPredicate(book -> book.getGenre().equals(genre)).collect(Collectors.toList());
+        return getBookPredicate(book -> book.getGenre().equalsIgnoreCase(genre)).collect(Collectors.toList());
     }
 
     public List<Book> sortBooksByAuthor() {
@@ -91,26 +91,28 @@ public class LibraryService {
         return getSortedReversedFunction(Book::getScore).collect(Collectors.toList());
     }
 
-    public Book getMostPopularBook() throws Exception {
-        Optional<Book> optionalBook = this.books.stream().max(Comparator.comparing(book -> book.getScoreRegistry().size()));
-        if (optionalBook.isPresent()) {
-            return optionalBook.get();
-        } else {
+    public List<Book> getMostPopularBook() throws Exception {
+        int mostVoted = findMostVotesNumber();
+        List<Book> mostVotedBooks = this.books.stream().filter(book -> book.getScoreRegistry().size() == mostVoted).collect(Collectors.toList());
+        if (mostVotedBooks.isEmpty()) {
             throw new Exception("Couldn't get the most popular book.");
+        } else {
+            return mostVotedBooks;
         }
     }
 
     public List<Book> getSortedScoreByGenre(String genre) {
-        return getBookPredicate(book -> book.getGenre().equals(genre))
+        return getBookPredicate(book -> book.getGenre().equalsIgnoreCase(genre))
                 .sorted(Comparator.comparing(Book::getScore).reversed()).collect(Collectors.toList());
     }
 
-    public Book getHighestRatedBook() throws Exception {
-        Optional<Book> optionalBook = this.books.stream().max(Comparator.comparing(Book::getScore));
-        if (optionalBook.isPresent()) {
-            return optionalBook.get();
-        } else {
+    public List<Book> getHighestRatedBook() throws Exception {
+        double highestRate = findHighestRate();
+        List<Book> highestRatedBooks = this.books.stream().filter(book -> book.getScore() == highestRate).collect(Collectors.toList());
+        if (highestRatedBooks.isEmpty()) {
             throw new Exception("Couldn't get the highest rated book.");
+        } else {
+          return  highestRatedBooks;
         }
     }
 
@@ -138,6 +140,25 @@ public class LibraryService {
 
     private Stream<Book> getSortedReversedFunction(Function<Book, Double> function) {
         return this.books.stream().sorted(Comparator.comparing(function).reversed());
+    }
+
+    private int findMostVotesNumber() {
+        Optional<Book> optionalBook = this.books.stream().max(Comparator.comparing(book -> book.getScoreRegistry().size()));
+        int mostVotes = -1;
+        if (optionalBook.isPresent()) {
+            mostVotes = optionalBook.get().getScoreRegistry().size();
+        }
+        return mostVotes;
+    }
+
+    private double findHighestRate() {
+        Optional<Book> optionalBook = this.books.stream().max(Comparator.comparing(Book::getScore));
+        double highestRate = -1;
+        if (optionalBook.isPresent()) {
+            highestRate = optionalBook.get().getScore();
+            return highestRate;
+        }
+        return highestRate;
     }
 
     private void calculateAverageScoreAndSetOnBook(Book book, int rate) {

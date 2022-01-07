@@ -128,16 +128,16 @@ class BookControllerTest {
     @Test
     void getBookByTitle() throws Exception {
         String title = "Diune";
-        Mockito.when(libraryService.getBookByTitle(title)).thenReturn(library.get(3));
+        Mockito.when(libraryService.getBookByTitle(title)).thenReturn(Collections.singletonList(library.get(3)));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/library/books/by-title")
                         .queryParam("title", title)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title", is(title)))
-                .andExpect(jsonPath("$.author", is("Frank Herbert")))
-                .andExpect(jsonPath("$.description", is("Story about a spice")));
+                .andExpect(jsonPath("$[0].title", is(title)))
+                .andExpect(jsonPath("$[0].author", is("Frank Herbert")))
+                .andExpect(jsonPath("$[0].description", is("Story about a spice")));
     }
 
     @Test
@@ -238,13 +238,13 @@ class BookControllerTest {
     @Test
     void getMostPopularBook() throws Exception {
         addRatesAndScores();
-        Mockito.when(libraryService.getMostPopularBook()).thenReturn(library.get(4));
+        Mockito.when(libraryService.getMostPopularBook()).thenReturn(Collections.singletonList(library.get(4)));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/library/books/most-popular")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title", is("Good Omens")));
+                .andExpect(jsonPath("$[0].title", is("Good Omens")));
     }
 
     @Test
@@ -278,14 +278,14 @@ class BookControllerTest {
     @Test
     void getHighestRatedBook() throws Exception {
         addRatesAndScores();
-        Mockito.when(libraryService.getHighestRatedBook()).thenReturn(library.get(2));
+        Mockito.when(libraryService.getHighestRatedBook()).thenReturn(Collections.singletonList(library.get(2)));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/library/books/highest-rated")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title", is("State of terror")))
-                .andExpect(jsonPath("$.author", is("Hillary Rodham Clinton")));
+                .andExpect(jsonPath("$[0].title", is("State of terror")))
+                .andExpect(jsonPath("$[0].author", is("Hillary Rodham Clinton")));
     }
 
     @Test
