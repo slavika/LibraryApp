@@ -5,14 +5,14 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ErrorResponse {
+public class ErrorResponseRepresentation {
 
     private int status;
     private String error;
     private String message;
     private String stackTrace;
 
-    public ErrorResponse(int status, String error, String message, String stackTrace) {
+    public ErrorResponseRepresentation(int status, String error, String message, String stackTrace) {
         this.status = status;
         this.error = error;
         this.message = message;

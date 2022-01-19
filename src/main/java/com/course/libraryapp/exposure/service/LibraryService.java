@@ -1,6 +1,10 @@
 package com.course.libraryapp.exposure.service;
 
-import com.course.libraryapp.exposure.model.Book;
+import com.course.libraryapp.exposure.mapper.BookMapper;
+import com.course.libraryapp.exposure.model.BookRepresentation;
+import com.course.libraryapp.exposure.repository.BookRepository;
+import com.course.libraryapp.persistance.model.BookEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.ApplicationScope;
 
@@ -14,47 +18,55 @@ import java.util.stream.Stream;
 @ApplicationScope
 public class LibraryService {
 
-    private final List<Book> books;
+    private final List<BookRepresentation> bookRepresentations;
+    private final BookRepository bookRepository;
 
-    public LibraryService() {
-        this.books = new ArrayList<>();
+    @Autowired
+    public LibraryService(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+        this.bookRepresentations = new ArrayList<>();
     }
 
-    public List<Book> checkSignatureAndAddBook(Book book) throws Exception {
-        if (isInLibrary(book)) {
-            throw new Exception("Book with provided signature " + book.getSignature() + " already in a library.");
+    public List<BookRepresentation> checkSignatureAndAddBook(BookRepresentation bookRepresentation) throws Exception {
+        if (isInLibrary(bookRepresentation)) {
+            throw new Exception("Book with provided signature " + bookRepresentation.getSignature() + " already in a library.");
         } else {
-            this.books.add(book);
-            return this.books;
+            this.bookRepresentations.add(bookRepresentation);
+//            BookEntity bookEntity = BookMapper.INSTANCE.bookRepToEntity(bookRepresentation);
+//            bookRepository.save(bookEntity);
+            return this.bookRepresentations;
         }
     }
 
-    public List<Book> checkSignaturesAndAddBooks(List<Book> booksToAdd) throws Exception {
-        for (Book book : booksToAdd) {
-            checkSignatureAndAddBook(book);
+    public List<BookRepresentation> checkSignaturesAndAddBooks(List<BookRepresentation> booksToAdd) throws Exception {
+        for (BookRepresentation bookRepresentation : booksToAdd) {
+            checkSignatureAndAddBook(bookRepresentation);
         }
         return booksToAdd;
     }
 
-    public List<Book> checkIdAndRemoveBook(int bookId) {
-        Book book = getBookById(bookId);
-        this.books.remove(book);
-        return this.books;
+    public List<BookRepresentation> checkIdAndRemoveBook(int bookId) {
+        BookRepresentation bookRepresentation = getBookById(bookId);
+//        BookEntity bookEntity = BookMapper.INSTANCE.bookRepToEntity(bookRepresentation);
+//        bookRepository.delete(bookEntity);
+        this.bookRepresentations.remove(bookRepresentation);
+        return this.bookRepresentations;
     }
 
-    public Book checkIdAndUpdateBook(int bookId, Book newBook) {
-        Book bookToBeUpdated = getBookById(bookId);
-        newBook.setId(bookId);
-        this.books.set(books.indexOf(bookToBeUpdated), newBook);
-        return this.books.get(books.indexOf(newBook));
+    public BookRepresentation checkIdAndUpdateBook(int bookId, BookRepresentation newBookRepresentation) {
+        BookRepresentation bookRepresentationToBeUpdated = getBookById(bookId);
+        newBookRepresentation.setId(bookId);
+        this.bookRepresentations.set(bookRepresentations.indexOf(bookRepresentationToBeUpdated), newBookRepresentation);
+        return this.bookRepresentations.get(bookRepresentations.indexOf(newBookRepresentation));
     }
 
-    public List<Book> getAllBooks() {
-        return this.books;
+    public List<BookRepresentation> getAllBooks() {
+        return this.bookRepresentations;
     }
 
-    public List<Book> getBookByTitle(String title) {
-        List<Book> listOfBooksByTitle = getBookPredicate(book -> book.getTitle().equalsIgnoreCase(title)).collect(Collectors.toList());
+    public List<BookRepresentation> getBookByTitle(String title) {
+        List<BookRepresentation> listOfBooksByTitle = getBookPredicate(book -> book.getTitle().equalsIgnoreCase(title)).collect(Collectors.toList());
+//        List<BookRepresentation> listOfBooksByTitle = bookRepository.findByTitle(title);
         if (listOfBooksByTitle.isEmpty()) {
             throw new NoSuchElementException("No requested book with title " + title + " in a library.");
         } else {
@@ -62,8 +74,8 @@ public class LibraryService {
         }
     }
 
-    public Book getBookById(int id) {
-        Optional<Book> optionalBook = getBookPredicate(book -> book.getId() == id).findAny();
+    public BookRepresentation getBookById(int id) {
+        Optional<BookRepresentation> optionalBook = getBookPredicate(book -> book.getId() == id).findAny();
         if (optionalBook.isPresent()) {
             return optionalBook.get();
         } else {
@@ -71,79 +83,81 @@ public class LibraryService {
         }
     }
 
-    public List<Book> getBooksByGenre(String genre) {
+    public List<BookRepresentation> getBooksByGenre(String genre) {
         return getBookPredicate(book -> book.getGenre().equalsIgnoreCase(genre)).collect(Collectors.toList());
     }
 
-    public List<Book> sortBooksByAuthor() {
-        return getSortedFunction(Book::getAuthor).collect(Collectors.toList());
+    public List<BookRepresentation> sortBooksByAuthor() {
+        return getSortedFunction(BookRepresentation::getAuthor).collect(Collectors.toList());
     }
 
-    public List<Book> sortBooksByTitle() {
-        return getSortedFunction(Book::getTitle).collect(Collectors.toList());
+    public List<BookRepresentation> sortBooksByTitle() {
+        return getSortedFunction(BookRepresentation::getTitle).collect(Collectors.toList());
     }
 
-    public List<Book> sortBooksByScoreAscending() {
-        return getSortedDoubleFunction(Book::getScore).collect(Collectors.toList());
+    public List<BookRepresentation> sortBooksByScoreAscending() {
+        return getSortedDoubleFunction(BookRepresentation::getScore).collect(Collectors.toList());
     }
 
-    public List<Book> sortBooksByScoreDescending() {
-        return getSortedReversedFunction(Book::getScore).collect(Collectors.toList());
+    public List<BookRepresentation> sortBooksByScoreDescending() {
+        return getSortedReversedFunction(BookRepresentation::getScore).collect(Collectors.toList());
     }
 
-    public List<Book> getMostPopularBook() throws Exception {
+    public List<BookRepresentation> getMostPopularBook() throws Exception {
         int mostVoted = findMostVotesNumber();
-        List<Book> mostVotedBooks = this.books.stream().filter(book -> book.getScoreRegistry().size() == mostVoted).collect(Collectors.toList());
-        if (mostVotedBooks.isEmpty()) {
+        List<BookRepresentation> mostVotedBookRepresentations = this.bookRepresentations.stream().filter(book -> book.getScoreRegistry().size() == mostVoted).collect(Collectors.toList());
+        if (mostVotedBookRepresentations.isEmpty()) {
             throw new Exception("Couldn't get the most popular book.");
         } else {
-            return mostVotedBooks;
+            return mostVotedBookRepresentations;
         }
     }
 
-    public List<Book> getSortedScoreByGenre(String genre) {
+    public List<BookRepresentation> getSortedScoreByGenre(String genre) {
         return getBookPredicate(book -> book.getGenre().equalsIgnoreCase(genre))
-                .sorted(Comparator.comparing(Book::getScore).reversed()).collect(Collectors.toList());
+                .sorted(Comparator.comparing(BookRepresentation::getScore).reversed()).collect(Collectors.toList());
     }
 
-    public List<Book> getHighestRatedBook() throws Exception {
+    public List<BookRepresentation> getHighestRatedBook() throws Exception {
         double highestRate = findHighestRate();
-        List<Book> highestRatedBooks = this.books.stream().filter(book -> book.getScore() == highestRate).collect(Collectors.toList());
-        if (highestRatedBooks.isEmpty()) {
+        List<BookRepresentation> highestRatedBookRepresentations = this.bookRepresentations.stream().filter(book -> book.getScore() == highestRate).collect(Collectors.toList());
+        if (highestRatedBookRepresentations.isEmpty()) {
             throw new Exception("Couldn't get the highest rated book.");
         } else {
-          return  highestRatedBooks;
+          return highestRatedBookRepresentations;
         }
     }
 
-    public Book checkIdAndRateABook(int bookId, int rate) {
-        Book bookToRate = getBookById(bookId);
-        calculateAverageScoreAndSetOnBook(bookToRate, rate);
-        return bookToRate;
+    public BookRepresentation checkIdAndRateABook(int bookId, int rate) {
+        BookRepresentation bookRepresentationToRate = getBookById(bookId);
+        calculateAverageScoreAndSetOnBook(bookRepresentationToRate, rate);
+        return bookRepresentationToRate;
     }
 
-    private boolean isInLibrary(Book book) {
-        return this.books.stream().anyMatch(bookItem -> bookItem.getSignature().equals(book.getSignature()));
+    private boolean isInLibrary(BookRepresentation bookRepresentation) {
+//        BookRepresentation bookRep = bookRepository.findBySignature(bookRepresentation.getSignature());
+//        return bookRep != null;
+        return this.bookRepresentations.stream().anyMatch(bookItem -> bookItem.getSignature().equals(bookRepresentation.getSignature()));
     }
 
-    private Stream<Book> getBookPredicate(Predicate<Book> predicate) {
-        return this.books.stream().filter(predicate);
+    private Stream<BookRepresentation> getBookPredicate(Predicate<BookRepresentation> predicate) {
+        return this.bookRepresentations.stream().filter(predicate);
     }
 
-    private Stream<Book> getSortedFunction(Function<Book, String> function) {
-        return this.books.stream().sorted(Comparator.comparing(function));
+    private Stream<BookRepresentation> getSortedFunction(Function<BookRepresentation, String> function) {
+        return this.bookRepresentations.stream().sorted(Comparator.comparing(function));
     }
 
-    private Stream<Book> getSortedDoubleFunction(Function<Book, Double> function) {
-        return this.books.stream().sorted(Comparator.comparing(function));
+    private Stream<BookRepresentation> getSortedDoubleFunction(Function<BookRepresentation, Double> function) {
+        return this.bookRepresentations.stream().sorted(Comparator.comparing(function));
     }
 
-    private Stream<Book> getSortedReversedFunction(Function<Book, Double> function) {
-        return this.books.stream().sorted(Comparator.comparing(function).reversed());
+    private Stream<BookRepresentation> getSortedReversedFunction(Function<BookRepresentation, Double> function) {
+        return this.bookRepresentations.stream().sorted(Comparator.comparing(function).reversed());
     }
 
     private int findMostVotesNumber() {
-        Optional<Book> optionalBook = this.books.stream().max(Comparator.comparing(book -> book.getScoreRegistry().size()));
+        Optional<BookRepresentation> optionalBook = this.bookRepresentations.stream().max(Comparator.comparing(book -> book.getScoreRegistry().size()));
         int mostVotes = -1;
         if (optionalBook.isPresent()) {
             mostVotes = optionalBook.get().getScoreRegistry().size();
@@ -152,7 +166,7 @@ public class LibraryService {
     }
 
     private double findHighestRate() {
-        Optional<Book> optionalBook = this.books.stream().max(Comparator.comparing(Book::getScore));
+        Optional<BookRepresentation> optionalBook = this.bookRepresentations.stream().max(Comparator.comparing(BookRepresentation::getScore));
         double highestRate = -1;
         if (optionalBook.isPresent()) {
             highestRate = optionalBook.get().getScore();
@@ -161,11 +175,11 @@ public class LibraryService {
         return highestRate;
     }
 
-    private void calculateAverageScoreAndSetOnBook(Book book, int rate) {
-        book.getScoreRegistry().add(rate);
-        DoubleSummaryStatistics scoreSummary = book.getScoreRegistry().stream().mapToDouble(value -> value).summaryStatistics();
+    private void calculateAverageScoreAndSetOnBook(BookRepresentation bookRepresentation, int rate) {
+        bookRepresentation.getScoreRegistry().add(rate);
+        DoubleSummaryStatistics scoreSummary = bookRepresentation.getScoreRegistry().stream().mapToDouble(value -> value).summaryStatistics();
         double newScore = scoreSummary.getAverage();
         double newScoreRounded = Math.round(newScore * 100.0) / 100.0;
-        book.setScore(newScoreRounded);
+        bookRepresentation.setScore(newScoreRounded);
     }
 }

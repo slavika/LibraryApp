@@ -1,13 +1,18 @@
 package com.course.libraryapp.exposure.controller;
 
-import com.course.libraryapp.exposure.model.ErrorResponse;
+import com.course.libraryapp.exposure.model.ErrorResponseRepresentation;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestControllerAdvice
@@ -17,17 +22,18 @@ class ErrorController extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers,
                                                                   HttpStatus status, WebRequest request) {
-        Exception exception = new Exception(ex.getBindingResult().getAllErrors().get(0).getDefaultMessage());
-        return this.createResponseEntity(exception, request);
+        List<ObjectError> exceptions =  ex.getBindingResult().getAllErrors();
+        List<String> errorMessages = exceptions.stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.toList());
+        return this.createResponseEntity(errorMessages, request);
     }
 
-    private ResponseEntity<Object> createResponseEntity(Exception ex, WebRequest request) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
+    private ResponseEntity<Object> createResponseEntity(List<String> errorMessages, WebRequest request) {
+        ErrorResponseRepresentation errorResponse = ErrorResponseRepresentation.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message(ex.getMessage())
+                .message(errorMessages.toString().replace("[","").replace("]",""))
                 .build();
-        return handleExceptionInternal(ex, errorResponse,
+        return handleExceptionInternal(new Exception(errorResponse.getMessage()), errorResponse,
                 new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
     }
 }

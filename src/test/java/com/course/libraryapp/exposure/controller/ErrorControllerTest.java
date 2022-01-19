@@ -1,6 +1,6 @@
 package com.course.libraryapp.exposure.controller;
 
-import com.course.libraryapp.exposure.model.Book;
+import com.course.libraryapp.exposure.model.BookRepresentation;
 import com.course.libraryapp.exposure.service.LibraryService;
 import com.course.libraryapp.exposure.util.JsonUtil;
 import org.junit.jupiter.api.Test;
@@ -34,13 +34,13 @@ class ErrorControllerTest {
     @Test
     void beanValidation_signatureMissing() throws Exception {
         Mockito.when(libraryService.checkSignatureAndAddBook
-                        (new Book("","LOTR", "Tolkien", "Desc", "fantasy")))
+                        (new BookRepresentation("","LOTR", "Tolkien", "Desc", "fantasy")))
                 .thenThrow(new BindException());
 
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/library/books")
                         .content(JsonUtil.mapToJson(
-                                new Book("","LOTR", "Tolkien", "Desc", "fantasy")))
+                                new BookRepresentation("","LOTR", "Tolkien", "Desc", "fantasy")))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError())
                 .andExpect(jsonPath("$.message", is("Signature cannot be empty")))

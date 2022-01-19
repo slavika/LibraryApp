@@ -1,17 +1,15 @@
 package com.course.libraryapp.exposure.model;
 
-import javax.persistence.*;
+import lombok.*;
 import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Entity
-public class Book {
+@Data
+public class BookRepresentation {
     private static final AtomicInteger count = new AtomicInteger(0);
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @NotBlank(message = "Signature cannot be empty")
     private String signature;
@@ -24,16 +22,15 @@ public class Book {
     @NotBlank(message = "Genre cannot be empty")
     private String genre;
     private double score;
-    @ElementCollection
     private List<Integer> scoreRegistry;
 
-    // public no-arg constructor required by JPA
-    public Book(){
+    // public no-arg constructor required by Spring
+    public BookRepresentation(){
         this.id = count.incrementAndGet();
         this.scoreRegistry = new ArrayList<>();
     }
 
-    public Book(String signature, String title, String author, String description, String genre) {
+    public BookRepresentation(String signature, String title, String author, String description, String genre) {
         this.id = count.incrementAndGet();
         this.title = title;
         this.author = author;
@@ -42,37 +39,5 @@ public class Book {
         this.signature = signature;
         this.score = 0.0;
         this.scoreRegistry = new ArrayList<>();
-    }
-
-    public int getId() {return id;}
-
-    public void setId(int id) { this.id = id;}
-
-    public String getSignature() {return signature;}
-
-    public String getTitle() {return title;}
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getGenre() {
-        return genre;
-    }
-
-    public double getScore() {
-        return score;
-    }
-
-    public void setScore(double score) {
-        this.score = score;
-    }
-
-    public List<Integer> getScoreRegistry() {
-        return scoreRegistry;
     }
 }
