@@ -248,13 +248,13 @@ class BookControllerTest {
 
     @Test
     void getMostPopularBookNotFound() throws Exception {
-        addRatesAndScores();
-        Mockito.when(libraryService.getMostPopularBook()).thenThrow(new Exception());
+        Mockito.when(libraryService.getMostPopularBook()).thenThrow(new Exception("Couldn't get the most popular book. No votes yet."));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/library/books/most-popular")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is("Couldn't get the most popular book. No votes yet.")));
     }
 
     @Test
@@ -289,13 +289,13 @@ class BookControllerTest {
 
     @Test
     void getHighestRatedBookNotFound() throws Exception {
-        addRatesAndScores();
-        Mockito.when(libraryService.getHighestRatedBook()).thenThrow(new Exception());
+        Mockito.when(libraryService.getHighestRatedBook()).thenThrow(new Exception("Couldn't get the highest rated book. All rate to 0.0"));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/library/books/highest-rated")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is("Couldn't get the highest rated book. All rate to 0.0")));
     }
 
     @Test

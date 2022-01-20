@@ -109,7 +109,7 @@ public class BookController {
             List<BookRepresentation> mostPopularBookRepresentations = libraryService.getMostPopularBook();
             return new ResponseEntity<>(mostPopularBookRepresentations, HttpStatus.OK);
         } catch (Exception e) {
-            return errorResponseEntity(HttpStatus.NO_CONTENT, e);
+            return errorResponseEntity(HttpStatus.OK, e);
         }
     }
 
@@ -125,7 +125,7 @@ public class BookController {
             List<BookRepresentation> highestRateBookRepresentations = libraryService.getHighestRatedBook();
             return new ResponseEntity<>(highestRateBookRepresentations, HttpStatus.OK);
         } catch (Exception e) {
-            return errorResponseEntity(HttpStatus.NO_CONTENT, e);
+            return errorResponseEntity(HttpStatus.OK, e);
         }
     }
 

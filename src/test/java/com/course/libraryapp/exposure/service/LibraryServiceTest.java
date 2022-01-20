@@ -22,7 +22,7 @@ class LibraryServiceTest {
     private static final List<BookRepresentation> library = Arrays.asList(
             new BookRepresentation("F01", "LOTR", "J.R.R.Tolkien", "A hobbit on a mission to destroy the ring", "fantasy"),
             new BookRepresentation("F02", "Stardust", "Neil Gaiman", "Young man tries to find a star for the woman he loves after they see it fall from the night sky. ", "fantasy"),
-            new BookRepresentation("T01", "State of terror", "Hillary Rodham Clinton", " A series of terrorist attacks throws the global order into disarray", "thriller"),
+            new BookRepresentation("T01", "State of terror", "Hillary Rodham Clinton", " A series of terrorist attacks throws the global order into disarray", "thriller/horror"),
             new BookRepresentation("SF01", "Diune", "Frank Herbert", "Story about a spice", "sci-fi"),
             new BookRepresentation("F03", "Good Omens", "Terry Pratchett & Neil Gaiman", "Extremely silly story of an angel", "fantasy")
     );
@@ -77,7 +77,8 @@ class LibraryServiceTest {
 
     @Test
     public void removeBookFromLibrary() {
-        List<BookRepresentation> bookRepresentations = libraryService.checkIdAndRemoveBook(1);
+        libraryService.checkIdAndRemoveBook(1);
+        List<BookRepresentation> bookRepresentations = libraryService.getAllBooks();
 
         assertAll(
                 () -> assertEquals(4, bookRepresentations.size()),
@@ -145,7 +146,7 @@ class LibraryServiceTest {
         List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByAuthor();
         List<BookRepresentation> sorted = Arrays.asList(
                 new BookRepresentation("SF01", "Diune", "Frank Herbert", "Story about a spice", "sci-fi"),
-                new BookRepresentation("T01", "State of terror", "Hillary Rodham Clinton", " A series of terrorist attacks throws the global order into disarray", "thriller"),
+                new BookRepresentation("T01", "State of terror", "Hillary Rodham Clinton", " A series of terrorist attacks throws the global order into disarray", "thriller/horror"),
                 new BookRepresentation("F01", "LOTR", "J.R.R.Tolkien", "A hobbit on a mission to destroy the ring", "fantasy"),
                 new BookRepresentation("F02", "Stardust", "Neil Gaiman", "Young man tries to find a star for the woman he loves after they see it fall from the night sky. ", "fantasy"),
                 new BookRepresentation("F03", "Good Omens", "Terry Pratchett & Neil Gaiman", "Extremely silly story of an angel", "fantasy")
@@ -168,7 +169,7 @@ class LibraryServiceTest {
                 new BookRepresentation("F03", "Good Omens", "Terry Pratchett & Neil Gaiman", "Extremely silly story of an angel", "fantasy"),
                 new BookRepresentation("F01", "LOTR", "J.R.R.Tolkien", "A hobbit on a mission to destroy the ring", "fantasy"),
                 new BookRepresentation("F02", "Stardust", "Neil Gaiman", "Young man tries to find a star for the woman he loves after they see it fall from the night sky. ", "fantasy"),
-                new BookRepresentation("T01", "State of terror", "Hillary Rodham Clinton", " A series of terrorist attacks throws the global order into disarray", "thriller")
+                new BookRepresentation("T01", "State of terror", "Hillary Rodham Clinton", " A series of terrorist attacks throws the global order into disarray", "thriller/horror")
         );
 
         assertAll(
@@ -217,18 +218,12 @@ class LibraryServiceTest {
         assertEquals("Good Omens", mostPopularBookRepresentation.get(1).getTitle());
     }
 
-//    @Test
-//    public void getMostPopularBookNoContent() {
-//        LibraryService libraryServiceMock = new LibraryService(bookRepository);
-//        LibraryService spy = Mockito.spy(libraryServiceMock);
-//
-//        try {
-//            Mockito.when(spy.getMostPopularBook()).thenThrow(Exception.class);
-//            spy.getMostPopularBook();
-//        } catch (Exception e) {
-//            assertEquals("Couldn't get the most popular book.", e.getMessage());
-//        }
-//    }
+    @Test
+    public void getMostPopularBookNoVotes() {
+        Exception exception = assertThrows(Exception.class, () ->
+                libraryService.getMostPopularBook());
+        assertEquals("Couldn't get the most popular book. No votes yet.", exception.getMessage());
+    }
 
     @Test
     public void getMostPopularByGenre() {
@@ -256,19 +251,13 @@ class LibraryServiceTest {
                 () -> assertEquals("State of terror", highestRatedBookRepresentations.get(0).getTitle())
         );
     }
-//
-//    @Test
-//    public void getHighestRatedBookNoContent() {
-//        LibraryService libraryServiceMock = new LibraryService(bookRepository);
-//        LibraryService spy = Mockito.spy(libraryServiceMock);
-//
-//        try {
-//            Mockito.when(spy.getHighestRatedBook()).thenThrow(Exception.class);
-//            spy.getHighestRatedBook();
-//        } catch (Exception e) {
-//            assertEquals("Couldn't get the highest rated book.", e.getMessage());
-//        }
-//    }
+
+    @Test
+    public void getHighestRatedBookAllRate0() {
+        Exception exception = assertThrows(Exception.class, () ->
+                libraryService.getHighestRatedBook());
+        assertEquals("Couldn't get the highest rated book. All rate to 0.0", exception.getMessage());
+    }
 
     @Test
     public void rateBook() {
