@@ -1,9 +1,11 @@
 package com.course.libraryapp.exposure.model;
 
 import lombok.*;
+
 import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
@@ -19,8 +21,7 @@ public class BookRepresentation {
     private String author;
     @NotBlank(message = "Description cannot be empty")
     private String description;
-    @NotBlank(message = "Genre cannot be empty")
-    private String genre;
+    private GenreEnumRepresentation genre;
     private double score;
     private List<Integer> scoreRegistry;
 
@@ -35,9 +36,18 @@ public class BookRepresentation {
         this.title = title;
         this.author = author;
         this.description = description;
-        this.genre = genre;
+        this.genre = checkIfGenreIsValid(genre);
         this.signature = signature;
         this.score = 0.0;
         this.scoreRegistry = new ArrayList<>();
+    }
+
+    // TODO dodac sprawdzenie czy gatunek istnieje
+    private GenreEnumRepresentation checkIfGenreIsValid(String genre) {
+        try {
+            return GenreEnumRepresentation.of(genre);
+        } catch (Exception ex) {
+            throw new NoSuchElementException("blad");
+        }
     }
 }

@@ -52,7 +52,7 @@ public class LibraryService {
     }
 
 
-    //dodac sprawdzenie sygnatury
+    // TODO dodac sprawdzenie sygnatury
     public BookRepresentation checkIdAndUpdateBook(int bookId, BookRepresentation newBookRepresentation) {
         getBookById(bookId);
         newBookRepresentation.setId(bookId);
@@ -85,6 +85,9 @@ public class LibraryService {
 
     public List<BookRepresentation> getBooksByGenre(String genre) {
         List<BookEntity> bookEntities = bookRepository.findAllByGenre(genre);
+        if (bookEntities.size() == 0){
+            throw new NoSuchElementException("No genre " + genre + " in a library.");
+        }
         return bookEntities.stream().map(this::mapEntityToRep).collect(Collectors.toList());
     }
 
@@ -128,7 +131,7 @@ public class LibraryService {
         List<BookEntity> bookEntities = bookRepository.findAllByGenre(genre);
         List<BookRepresentation> bookRepresentations = bookEntities.stream().map(this::mapEntityToRep).collect(Collectors.toList());
 
-        return getBookPredicate(bookRepresentations, book -> book.getGenre().equalsIgnoreCase(genre))
+        return getBookPredicate(bookRepresentations, book -> book.getGenre().getGenreName().equalsIgnoreCase(genre))
                 .sorted(Comparator.comparing(BookRepresentation::getScore).reversed()).collect(Collectors.toList());
     }
 

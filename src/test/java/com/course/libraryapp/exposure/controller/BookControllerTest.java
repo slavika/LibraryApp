@@ -34,7 +34,7 @@ class BookControllerTest {
     private static final List<BookRepresentation> library = Arrays.asList(
             new BookRepresentation("F01","LOTR", "J.R.R.Tolkien", "A hobbit on a mission to destroy the ring", "fantasy"),
             new BookRepresentation("F02" ,"Stardust", "Neil Gaiman", "Young man tries to find a star for the woman he loves after they see it fall from the night sky. ", "fantasy"),
-            new BookRepresentation("T01", "State of terror", "Hillary Rodham Clinton", "A series of terrorist attacks throws the global order into disarray", "thriller"),
+            new BookRepresentation("T01", "State of terror", "Hillary Rodham Clinton", "A series of terrorist attacks throws the global order into disarray", "thriller/horror"),
             new BookRepresentation("SF01","Diune", "Frank Herbert", "Story about a spice", "sci-fi"),
             new BookRepresentation("F03","Good Omens", "Terry Pratchett & Neil Gaiman", "Extremely silly story of an angel", "fantasy")
     );
@@ -154,7 +154,7 @@ class BookControllerTest {
     @Test
     void getBooksByGenre() throws Exception {
         String genre = "fantasy";
-        List<BookRepresentation> filteredBookRepresentations = library.stream().filter(book -> book.getGenre().equals(genre)).collect(Collectors.toList());
+        List<BookRepresentation> filteredBookRepresentations = library.stream().filter(book -> book.getGenre().getGenreName().equals(genre)).collect(Collectors.toList());
         Mockito.when(libraryService.getBooksByGenre(genre)).thenReturn(filteredBookRepresentations);
 
         mockMvc.perform(MockMvcRequestBuilders
@@ -166,6 +166,19 @@ class BookControllerTest {
                 .andExpect(jsonPath("$..title", hasItem("LOTR")))
                 .andExpect(jsonPath("$..title", hasItem("Good Omens")))
                 .andExpect(jsonPath("$..title", hasItem("Stardust")));
+    }
+
+    @Test
+    void getBookByGenreNotFound() throws Exception {
+        String genre = "fantasyyy";
+        Mockito.when(libraryService.getBooksByGenre(genre)).thenThrow(new NoSuchElementException("No genre fantasyyy in a library."));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/library/books/by-genre")
+                        .queryParam("genre", genre)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is("No genre fantasyyy in a library.")));
     }
 
     @Test
@@ -261,7 +274,7 @@ class BookControllerTest {
     void getSortedScoreByGenre() throws Exception {
         addRatesAndScores();
         String genre = "fantasy";
-        List<BookRepresentation> sortedBookRepresentations = library.stream().filter(book -> book.getGenre().equals(genre))
+        List<BookRepresentation> sortedBookRepresentations = library.stream().filter(book -> book.getGenre().getGenreName().equals(genre))
                 .sorted(Comparator.comparing(BookRepresentation::getScore).reversed()).collect(Collectors.toList());
         Mockito.when(libraryService.getSortedScoreByGenre(genre)).thenReturn(sortedBookRepresentations);
 

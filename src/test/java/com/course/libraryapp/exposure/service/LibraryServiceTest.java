@@ -116,11 +116,18 @@ class LibraryServiceTest {
 
         assertAll(
                 () -> assertEquals(3, fantasyBookRepresentations.size()),
-                () -> fantasyBookRepresentations.forEach(book -> assertEquals("fantasy", book.getGenre())),
+                () -> fantasyBookRepresentations.forEach(book -> assertEquals("fantasy", book.getGenre().getGenreName())),
                 () -> assertTrue(fantasyBookRepresentations.contains(library.get(0))),
                 () -> assertTrue(fantasyBookRepresentations.contains(library.get(1))),
                 () -> assertTrue(fantasyBookRepresentations.contains(library.get(4)))
         );
+    }
+
+    @Test
+    public void getBooksByGenreNonExisting() {
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
+                libraryService.getBooksByGenre("fantasyyy"));
+        assertEquals("No genre fantasyyy in a library.", exception.getMessage());
     }
 
     @Test

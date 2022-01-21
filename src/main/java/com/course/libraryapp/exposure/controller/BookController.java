@@ -74,8 +74,12 @@ public class BookController {
 
     @GetMapping("/books/by-genre")
     public ResponseEntity<Object> getBooksByGenre(@RequestParam("genre") String genre) {
-        List<BookRepresentation> booksByGenre = libraryService.getBooksByGenre(genre);
-        return new ResponseEntity<>(booksByGenre, HttpStatus.OK);
+        try{
+            List<BookRepresentation> booksByGenre = libraryService.getBooksByGenre(genre);
+            return new ResponseEntity<>(booksByGenre, HttpStatus.OK);
+        } catch (Exception e){
+            return errorResponseEntity(HttpStatus.NOT_FOUND, e);
+        }
     }
 
     @GetMapping("/books/sorted-by-{param}")
