@@ -17,13 +17,12 @@ import java.util.Objects;
 @Repository
 public interface SequenceIdRepository extends MongoRepository<SequenceIdEntity, Integer> {
 
-    default int getLastSequenceNumber() {
-
+    default int getLastSequenceNumber(String uri) {
         String sequenceCollection = "counters";
         String sequenceField = "seq";
         String databaseName = "lib";
 
-        MongoClientURI mongoClientURI = new MongoClientURI("mongodb+srv://slavika:slavika@qacourse.ymd9j.mongodb.net");
+        MongoClientURI mongoClientURI = new MongoClientURI(uri);
         MongoClient mongoClient = new MongoClient(mongoClientURI);
         MongoDatabase database = mongoClient.getDatabase(databaseName);
         MongoCollection<Document> seq = database.getCollection(sequenceCollection); // get the collection (this will create it if needed)
@@ -35,7 +34,7 @@ public interface SequenceIdRepository extends MongoRepository<SequenceIdEntity, 
 
         seq.updateOne(query, updates, options);
 
-        int i = (int) Objects.requireNonNull(seq.find(Filters.eq("_id", "bookId")).first()).get(sequenceField);
-        return i;
+        int sequenceNumber = (int) Objects.requireNonNull(seq.find(Filters.eq("_id", "bookId")).first()).get(sequenceField);
+        return sequenceNumber;
     }
 }
