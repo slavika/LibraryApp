@@ -2,6 +2,7 @@ package com.course.libraryapp.exposure.service;
 
 import com.course.libraryapp.exposure.mapper.BookMapper;
 import com.course.libraryapp.exposure.model.BookRepresentation;
+import com.course.libraryapp.exposure.model.GenreEnumRepresentation;
 import com.course.libraryapp.exposure.repository.BookRepository;
 import com.course.libraryapp.persistance.model.BookEntity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ public class LibraryService {
         if (isInLibrary(bookEntity)) {
             throw new Exception("Book with provided signature " + bookEntity.getSignature() + " already in a library.");
         } else {
-            bookRepository.save(bookEntity);
+            bookRepository.saveCustomized(bookEntity);
             return this.bookRepresentations;
         }
     }
@@ -50,7 +51,6 @@ public class LibraryService {
         bookRepository.delete(bookEntity);
         return null;
     }
-
 
     // TODO dodac sprawdzenie sygnatury
     public BookRepresentation checkIdAndUpdateBook(int bookId, BookRepresentation newBookRepresentation) {
@@ -84,7 +84,7 @@ public class LibraryService {
     }
 
     public List<BookRepresentation> getBooksByGenre(String genre) {
-        List<BookEntity> bookEntities = bookRepository.findAllByGenre(genre);
+        List<BookEntity> bookEntities = bookRepository.findAllByGenre(GenreEnumRepresentation.of(genre).toString());
         if (bookEntities.size() == 0){
             throw new NoSuchElementException("No genre " + genre + " in a library.");
         }

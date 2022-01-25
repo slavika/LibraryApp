@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BookRepository extends MongoRepository<BookEntity, Long> {
+public interface BookRepository extends MongoRepository<BookEntity, Long>, BookRepositoryCustom {
 
     @Query(value = "{'title': {$regex : ?0, $options: 'i'}}")
     List<BookEntity> findAllByTitle(String title);

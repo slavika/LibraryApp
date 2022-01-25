@@ -11,7 +11,7 @@ public interface BookMapper {
 
     BookMapper INSTANCE = Mappers.getMapper(BookMapper.class);
 
-//    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id", ignore = true)
     BookEntity bookRepToEntity(BookRepresentation bookRepresentation);
     BookRepresentation entityToBookRep(BookEntity bookEntity);
 }

@@ -27,12 +27,12 @@ public class BookRepresentation {
 
     // public no-arg constructor required by Spring
     public BookRepresentation(){
-        this.id = count.incrementAndGet();
+//        this.id = count.incrementAndGet();
         this.scoreRegistry = new ArrayList<>();
     }
 
     public BookRepresentation(String signature, String title, String author, String description, String genre) {
-        this.id = count.incrementAndGet();
+//        this.id = count.incrementAndGet();
         this.title = title;
         this.author = author;
         this.description = description;

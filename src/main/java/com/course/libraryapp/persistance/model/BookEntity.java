@@ -15,7 +15,6 @@ import java.util.List;
 public class BookEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @NotBlank(message = "Signature cannot be empty")
     private String signature;

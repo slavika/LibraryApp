@@ -1,8 +1,10 @@
 package com.course.libraryapp.exposure.controller;
 
+import com.course.libraryapp.exposure.mapper.BookMapper;
 import com.course.libraryapp.exposure.model.BookRepresentation;
 import com.course.libraryapp.exposure.service.LibraryService;
 import com.course.libraryapp.exposure.util.JsonUtil;
+import com.course.libraryapp.persistance.model.BookEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;

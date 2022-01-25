@@ -1,7 +1,8 @@
 package com.course.libraryapp.exposure.repository;
 
 import com.course.libraryapp.persistance.model.SequenceIdEntity;
-import com.mongodb.*;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -25,7 +26,7 @@ public interface SequenceIdRepository extends MongoRepository<SequenceIdEntity, 
         MongoClientURI mongoClientURI = new MongoClientURI(uri);
         MongoClient mongoClient = new MongoClient(mongoClientURI);
         MongoDatabase database = mongoClient.getDatabase(databaseName);
-        MongoCollection<Document> seq = database.getCollection(sequenceCollection); // get the collection (this will create it if needed)
+        MongoCollection<Document> seq = database.getCollection(sequenceCollection);
 
         Document query = new Document().append("_id", "bookId");
 
@@ -34,7 +35,8 @@ public interface SequenceIdRepository extends MongoRepository<SequenceIdEntity, 
 
         seq.updateOne(query, updates, options);
 
-        int sequenceNumber = (int) Objects.requireNonNull(seq.find(Filters.eq("_id", "bookId")).first()).get(sequenceField);
+        int sequenceNumber = (int) Objects.requireNonNull(seq.find(Filters.eq("_id", "bookId"))
+                .first()).get(sequenceField);
         return sequenceNumber;
     }
 }
