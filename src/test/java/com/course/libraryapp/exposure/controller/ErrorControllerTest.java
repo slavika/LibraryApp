@@ -34,13 +34,13 @@ class ErrorControllerTest {
     @Test
     void beanValidation_signatureMissing() throws Exception {
         Mockito.when(libraryService.checkSignatureAndAddBook
-                        (new BookRepresentation("","LOTR", "Tolkien", "Desc", "fantasy")))
+                        (new BookRepresentation(1, "","LOTR", "Tolkien", "Desc", "fantasy")))
                 .thenThrow(new BindException());
 
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/library/books")
                         .content(JsonUtil.mapToJson(
-                                new BookRepresentation("","LOTR", "Tolkien", "Desc", "fantasy")))
+                                new BookRepresentation(1, "","LOTR", "Tolkien", "Desc", "fantasy")))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError())
                 .andExpect(jsonPath("$.message", is("Signature cannot be empty")))

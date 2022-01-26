@@ -27,8 +27,8 @@ public class BookController {
     @PostMapping("/books")
     public ResponseEntity<Object> addBook(@Valid @RequestBody BookRepresentation bookRepresentation) {
         try {
-            libraryService.checkSignatureAndAddBook(bookRepresentation);
-            return new ResponseEntity<>(bookRepresentation, HttpStatus.CREATED);
+            BookRepresentation bookRepresentation1 = libraryService.checkSignatureAndAddBook(bookRepresentation);
+            return new ResponseEntity<>(bookRepresentation1, HttpStatus.CREATED);
         } catch (Exception e) {
             return errorResponseEntity(HttpStatus.BAD_REQUEST, e);
         }

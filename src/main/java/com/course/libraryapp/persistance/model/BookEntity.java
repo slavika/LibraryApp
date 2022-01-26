@@ -1,5 +1,6 @@
 package com.course.libraryapp.persistance.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -12,6 +13,7 @@ import java.util.List;
 @Document(collection = "books")
 @Setter
 @Getter
+@AllArgsConstructor
 public class BookEntity {
 
     @Id

@@ -28,13 +28,13 @@ public class LibraryService {
         this.bookRepresentations = new ArrayList<>();
     }
 
-    public List<BookRepresentation> checkSignatureAndAddBook(BookRepresentation bookRepresentation) throws Exception {
+    public BookRepresentation checkSignatureAndAddBook(BookRepresentation bookRepresentation) throws Exception {
         BookEntity bookEntity = mapRepToEntity(bookRepresentation);
         if (isInLibrary(bookEntity)) {
             throw new Exception("Book with provided signature " + bookEntity.getSignature() + " already in a library.");
         } else {
             bookRepository.saveCustomized(bookEntity);
-            return this.bookRepresentations;
+            return mapEntityToRep(bookEntity);
         }
     }
 
@@ -84,11 +84,12 @@ public class LibraryService {
     }
 
     public List<BookRepresentation> getBooksByGenre(String genre) {
-        List<BookEntity> bookEntities = bookRepository.findAllByGenre(GenreEnumRepresentation.of(genre).toString());
-        if (bookEntities.size() == 0){
+        try {
+            List<BookEntity> bookEntities = bookRepository.findAllByGenre(GenreEnumRepresentation.of(genre.toLowerCase()).getGenreName());
+            return bookEntities.stream().map(this::mapEntityToRep).collect(Collectors.toList());
+        } catch (Exception e) {
             throw new NoSuchElementException("No genre " + genre + " in a library.");
         }
-        return bookEntities.stream().map(this::mapEntityToRep).collect(Collectors.toList());
     }
 
     public List<BookRepresentation> sortBooksByAuthor() {
