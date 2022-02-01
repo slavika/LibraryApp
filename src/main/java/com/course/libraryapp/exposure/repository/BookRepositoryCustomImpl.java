@@ -21,7 +21,7 @@ public class BookRepositoryCustomImpl implements BookRepositoryCustom {
 
     @Override
     public BookEntity saveCustomized(BookEntity bookEntity) {
-        int seq = sequenceIdRepository.getLastSequenceNumber(uri);
+        int seq = sequenceIdRepository.getNextSequenceNumber(uri);
         bookEntity.setId(seq);
         mongoTemplate.save(bookEntity);
         return  bookEntity;

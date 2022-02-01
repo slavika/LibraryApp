@@ -18,25 +18,27 @@ import java.util.Objects;
 @Repository
 public interface SequenceIdRepository extends MongoRepository<SequenceIdEntity, Integer> {
 
-    default int getLastSequenceNumber(String uri) {
+    default int getNextSequenceNumber(String uri) {
+        MongoCollection<Document> counterCollection = connectToDbAndGetCounterCollection(uri);
+
+        String sequenceNumberField = "seq";
+        Bson updates = Updates.inc(sequenceNumberField, 1);
+        UpdateOptions options = new UpdateOptions().upsert(true);
+        Document query = new Document().append("_id", "bookId");
+        counterCollection.updateOne(query, updates, options);
+
+        int sequenceNumber = (int) Objects.requireNonNull(counterCollection.find(Filters.eq("_id", "bookId"))
+                .first()).get(sequenceNumberField);
+        return sequenceNumber;
+    }
+
+    private MongoCollection<Document> connectToDbAndGetCounterCollection(String uri){
         String sequenceCollection = "counters";
-        String sequenceField = "seq";
         String databaseName = "lib";
 
         MongoClientURI mongoClientURI = new MongoClientURI(uri);
         MongoClient mongoClient = new MongoClient(mongoClientURI);
         MongoDatabase database = mongoClient.getDatabase(databaseName);
-        MongoCollection<Document> seq = database.getCollection(sequenceCollection);
-
-        Document query = new Document().append("_id", "bookId");
-
-        Bson updates = Updates.inc(sequenceField, 1);
-        UpdateOptions options = new UpdateOptions().upsert(true);
-
-        seq.updateOne(query, updates, options);
-
-        int sequenceNumber = (int) Objects.requireNonNull(seq.find(Filters.eq("_id", "bookId"))
-                .first()).get(sequenceField);
-        return sequenceNumber;
+        return database.getCollection(sequenceCollection);
     }
 }

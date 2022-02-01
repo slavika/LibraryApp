@@ -151,22 +151,22 @@ class BookControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-//    @Test
-//    void getBooksByGenre() throws Exception {
-//        String genre = "fantasy";
-//        List<BookRepresentation> filteredBookRepresentations = library.stream().filter(book -> book.getGenre().getGenreName().equals(genre)).collect(Collectors.toList());
-//        Mockito.when(libraryService.getBooksByGenre(genre)).thenReturn(filteredBookRepresentations);
-//
-//        mockMvc.perform(MockMvcRequestBuilders
-//                        .get("/library/books/by-genre")
-//                        .queryParam("genre", genre)
-//                        .contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$", hasSize(3)))
-//                .andExpect(jsonPath("$..title", hasItem("LOTR")))
-//                .andExpect(jsonPath("$..title", hasItem("Good Omens")))
-//                .andExpect(jsonPath("$..title", hasItem("Stardust")));
-//    }
+    @Test
+    void getBooksByGenre() throws Exception {
+        String genre = "fantasy";
+        List<BookRepresentation> filteredBookRepresentations = library.stream().filter(book -> book.getGenre().getGenreName().equals(genre)).collect(Collectors.toList());
+        Mockito.when(libraryService.getBooksByGenre(genre)).thenReturn(filteredBookRepresentations);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/library/books/by-genre")
+                        .queryParam("genre", genre)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$..title", hasItem("LOTR")))
+                .andExpect(jsonPath("$..title", hasItem("Good Omens")))
+                .andExpect(jsonPath("$..title", hasItem("Stardust")));
+    }
 
     @Test
     void getBookByGenreNotFound() throws Exception {
@@ -270,22 +270,22 @@ class BookControllerTest {
                 .andExpect(jsonPath("$.message", is("Couldn't get the most popular book. No votes yet.")));
     }
 
-//    @Test
-//    void getSortedScoreByGenre() throws Exception {
-//        addRatesAndScores();
-//        String genre = "fantasy";
-//        List<BookRepresentation> sortedBookRepresentations = library.stream().filter(book -> book.getGenre().getGenreName().equals(genre))
-//                .sorted(Comparator.comparing(BookRepresentation::getScore).reversed()).collect(Collectors.toList());
-//        Mockito.when(libraryService.getSortedScoreByGenre(genre)).thenReturn(sortedBookRepresentations);
-//
-//        mockMvc.perform(MockMvcRequestBuilders
-//                        .get("/library/books/sorted-by-score/" + genre)
-//                        .contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$[0].title", is("LOTR")))
-//                .andExpect(jsonPath("$[1].title", is("Good Omens")))
-//                .andExpect(jsonPath("$[2].title", is("Stardust")));
-//    }
+    @Test
+    void getSortedScoreByGenre() throws Exception {
+        addRatesAndScores();
+        String genre = "fantasy";
+        List<BookRepresentation> sortedBookRepresentations = library.stream().filter(book -> book.getGenre().getGenreName().equals(genre))
+                .sorted(Comparator.comparing(BookRepresentation::getScore).reversed()).collect(Collectors.toList());
+        Mockito.when(libraryService.getSortedScoreByGenre(genre)).thenReturn(sortedBookRepresentations);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/library/books/sorted-by-score/" + genre)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title", is("LOTR")))
+                .andExpect(jsonPath("$[1].title", is("Good Omens")))
+                .andExpect(jsonPath("$[2].title", is("Stardust")));
+    }
 
     @Test
     void getHighestRatedBook() throws Exception {
