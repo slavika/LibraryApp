@@ -32,7 +32,7 @@ class ErrorControllerTest {
     private LibraryService libraryService;
 
     @Test
-    void beanValidation_signatureMissing() throws Exception {
+    void signatureMissingValidation() throws Exception {
         Mockito.when(libraryService.checkSignatureAndAddBook
                         (new BookRepresentation(1, "","LOTR", "Tolkien", "Desc", "fantasy")))
                 .thenThrow(new BindException());

@@ -6,12 +6,9 @@ import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
 public class BookRepresentation {
-    private static final AtomicInteger count = new AtomicInteger(0);
-
     private int id;
     @NotBlank(message = "Signature cannot be empty")
     private String signature;
