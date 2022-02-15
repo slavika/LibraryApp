@@ -29,7 +29,7 @@ public class GenreControllerTest {
     private GenreService genreService;
 
     @Test
-    void getGenres() throws Exception {
+    void should_ReturnAllGenres_When_ExistsAny() throws Exception {
         Mockito.when(genreService.getAllGenres()).thenReturn(Arrays.asList("fantasy", "sci-fi"));
 
         mockMvc.perform(MockMvcRequestBuilders

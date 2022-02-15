@@ -4,9 +4,10 @@ import com.course.libraryapp.exposure.repository.GenreRepository;
 import com.course.libraryapp.persistance.model.GenreEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,16 +15,16 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class GenreServiceTest {
 
     private static final GenreEntity genreFantasyEntity = new GenreEntity("1", "fantasy");
     private static final GenreEntity genreSciFiEntity = new GenreEntity("2", "sci-fi");
 
-    @MockBean
+    @Mock
     GenreRepository genreRepository;
 
-    @Autowired
+    @InjectMocks
     private GenreService genreService;
 
     @BeforeEach
@@ -32,7 +33,7 @@ public class GenreServiceTest {
     }
 
     @Test
-    public void getGenres() {
+    public void should_ReturnAllGenres_When_AnyExist() {
         when(genreRepository.findAll()).thenReturn(Arrays.asList(genreFantasyEntity, genreSciFiEntity));
 
         List<String> genres = genreService.getAllGenres();
