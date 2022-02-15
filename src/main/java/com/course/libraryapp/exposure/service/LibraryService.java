@@ -30,7 +30,7 @@ public class LibraryService {
 
     public BookRepresentation checkSignatureAndAddBook(BookRepresentation bookRepresentation) throws Exception {
         BookEntity bookEntity = mapRepToEntity(bookRepresentation);
-        if (isInLibrary(bookEntity)) {
+        if (isInLibraryBySignature(bookEntity)) {
             throw new Exception("Book with provided signature " + bookEntity.getSignature() + " already in a library.");
         } else {
             bookRepository.saveCustomized(bookEntity);
@@ -156,7 +156,7 @@ public class LibraryService {
         return bookRepresentationToRate;
     }
 
-    private boolean isInLibrary(BookEntity bookEntity) {
+    private boolean isInLibraryBySignature(BookEntity bookEntity) {
         BookEntity book = bookRepository.findBySignature(bookEntity.getSignature());
         return book != null;
     }

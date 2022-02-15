@@ -4,20 +4,19 @@ import com.course.libraryapp.exposure.model.BookRepresentation;
 import com.course.libraryapp.exposure.repository.BookRepository;
 import com.course.libraryapp.persistance.model.BookEntity;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @EnableConfigurationProperties
 class LibraryServiceTest {
@@ -45,10 +44,10 @@ class LibraryServiceTest {
             "A hobbit on a mission", "fantasy", 0.0, Arrays.asList(2, 4, 5));
 
 
-    @MockBean
+    @Mock
     BookRepository bookRepository;
 
-    @Autowired
+    @InjectMocks
     private LibraryService libraryService;
 
     @BeforeEach
@@ -56,264 +55,274 @@ class LibraryServiceTest {
         libraryService = new LibraryService(bookRepository);
     }
 
-    @Test
-    public void addBookToLibrary() throws Exception {
-        when(bookRepository.saveCustomized(bookEntity)).thenReturn(bookEntity);
+    @Nested
+    class CRUDTests{
 
-        BookRepresentation bookRep = libraryService.checkSignatureAndAddBook(bookRepresentation);
+        @Test
+        public void should_AddBookToLibrary_When_BookRepIsOk() throws Exception {
+            BookRepresentation bookRep = libraryService.checkSignatureAndAddBook(bookRepresentation);
 
-        assertAll(
-                () -> assertEquals(bookRep.getTitle(), bookEntity.getTitle()),
-                () -> assertEquals(bookRep.getAuthor(), bookEntity.getAuthor()),
-                () -> assertEquals(bookRep.getDescription(), bookEntity.getDescription())
-        );
+            assertAll(
+                    () -> assertEquals(bookRep.getTitle(), bookEntity.getTitle()),
+                    () -> assertEquals(bookRep.getAuthor(), bookEntity.getAuthor()),
+                    () -> assertEquals(bookRep.getDescription(), bookEntity.getDescription())
+            );
+        }
+
+        @Test
+        public void should_AddListOfBooksToLibrary_When_CorrectListOfBooksGiven() throws Exception {
+            when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity5, bookEntity6));
+
+            final List<BookRepresentation> listOfBookRepresentations = Arrays.asList(bookRepresentation5, bookRepresentation6);
+
+            List<BookRepresentation> result = libraryService.checkSignaturesAndAddBooks(listOfBookRepresentations);
+
+            assertAll(
+                    () -> assertEquals(2, libraryService.getAllBooks().size()),
+                    () -> assertEquals(result.get(0).getSignature(), bookEntity5.getSignature()),
+                    () -> assertEquals(result.get(1).getSignature(), bookEntity6.getSignature())
+            );
+        }
+
+        @Test
+        public void should_RemoveBookFromLibrary_When_BookIdExists() {
+            when(bookRepository.findById(1)).thenReturn(bookEntity);
+            when(bookRepository.findAll()).thenReturn(Collections.singletonList(bookEntity2));
+
+            libraryService.checkIdAndRemoveBook(1);
+            List<BookRepresentation> bookRepresentations = libraryService.getAllBooks();
+
+            assertAll(
+                    () -> assertEquals(1, bookRepresentations.size()),
+                    () -> assertTrue(bookRepresentations.stream().noneMatch(book -> book.getTitle().equals("LOTR")))
+            );
+        }
+
+        @Test
+        public void should_UpdateBook_When_BookIdExists() {
+            when(bookRepository.findById(1)).thenReturn(bookEntity);
+
+            BookRepresentation updatedBookRepresentation = libraryService.checkIdAndUpdateBook(1, bookRepresentation2);
+
+            assertEquals("Fellowship of the ring", updatedBookRepresentation.getTitle());
+        }
+
+        @Test
+        public void should_RateABook_When_BookIdExists() {
+            when(bookRepository.findById(1)).thenReturn(bookEntity);
+
+            BookRepresentation bookRepresentation = libraryService.checkIdAndRateABook(1, 4);
+            libraryService.checkIdAndRateABook(1, 5);
+
+            assertAll(
+                    () -> assertEquals(1, bookRepresentation.getScoreRegistry().size()),
+                    () -> assertEquals(4.0, bookRepresentation.getScore())
+            );
+        }
     }
 
-    @Test
-    public void addDuplicateBookToLibrary() {
-        when(bookRepository.findBySignature("F01")).thenReturn(bookEntity);
+    @Nested
+    class ReturnFilteredBooksTests {
+        @Test
+        public void should_ReturnBooksByTitle_When_TitleExists() {
+            when(bookRepository.findAllByTitle("Witcher")).thenReturn(Arrays.asList(bookEntity3, bookEntity7));
 
-        Exception exception = assertThrows(Exception.class, () -> libraryService.checkSignatureAndAddBook(bookRepresentation));
-        assertEquals("Book with provided signature F01 already in a library.", exception.getMessage());
+            List<BookRepresentation> bookRepresentation = libraryService.getBookByTitle("Witcher");
+
+            assertAll(
+                    () -> assertEquals(bookEntity3.getTitle(), bookRepresentation.get(0).getTitle()),
+                    () -> assertEquals(bookEntity7.getTitle(), bookRepresentation.get(1).getTitle())
+            );
+        }
+
+        @Test
+        public void should_ReturnBooksByGenre_When_GenreExists() {
+            when(bookRepository.findAllByGenre("fantasy")).thenReturn(Arrays.asList(bookEntity2, bookEntity3));
+
+            List<BookRepresentation> fantasyBookRepresentations = libraryService.getBooksByGenre("fantasy");
+
+            assertAll(
+                    () -> assertEquals(2, fantasyBookRepresentations.size()),
+                    () -> fantasyBookRepresentations.forEach(book -> assertEquals("fantasy", book.getGenre().getGenreName()))
+            );
+        }
+
+        @Test
+        public void should_ReturnMostPopularBook_When_ThereIsOne() throws Exception {
+            when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6, bookEntity3));
+
+            List<BookRepresentation> mostPopularBookRepresentation = libraryService.getMostPopularBook();
+
+            assertAll(
+                    () -> assertEquals(bookEntity2.getTitle(), mostPopularBookRepresentation.get(0).getTitle()),
+                    () -> assertEquals(bookEntity7.getTitle(), mostPopularBookRepresentation.get(1).getTitle())
+            );
+        }
+
+        @Test
+        public void should_ReturnMostPopularBooksByGenre_When_GenreExists() {
+            when(bookRepository.findAllByGenre("fantasy")).thenReturn(Arrays.asList(bookEntity2, bookEntity7, bookEntity3));
+
+            List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.getSortedScoreByGenre("fantasy");
+
+            assertAll(
+                    () -> assertEquals(3, sortedLibraryBookRepresentations.size()),
+                    () -> assertEquals(bookEntity2.getTitle(), sortedLibraryBookRepresentations.get(0).getTitle()),
+                    () -> assertEquals(5.0, sortedLibraryBookRepresentations.get(0).getScore()),
+                    () -> assertEquals(bookEntity3.getTitle(), sortedLibraryBookRepresentations.get(1).getTitle()),
+                    () -> assertEquals(3.0, sortedLibraryBookRepresentations.get(1).getScore()),
+                    () -> assertEquals(bookEntity7.getTitle(), sortedLibraryBookRepresentations.get(2).getTitle()),
+                    () -> assertEquals(0.0, sortedLibraryBookRepresentations.get(2).getScore())
+            );
+        }
+
+        @Test
+        public void should_ReturnHighestRatedBook_When_ExistsOne() throws Exception {
+            when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6, bookEntity3));
+
+            List<BookRepresentation> highestRatedBookRepresentations = libraryService.getHighestRatedBook();
+
+            assertAll(
+                    () -> assertEquals(5.0, highestRatedBookRepresentations.get(0).getScore()),
+                    () -> assertEquals(bookEntity2.getTitle(), highestRatedBookRepresentations.get(0).getTitle())
+            );
+        }
     }
 
-    @Test
-    public void addListOfBooksToLibrary() throws Exception {
-        when(bookRepository.saveCustomized(bookEntity5)).thenReturn(bookEntity);
-        when(bookRepository.saveCustomized(bookEntity6)).thenReturn(bookEntity2);
-        when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity5, bookEntity6));
+    @Nested
+    class SortingTests {
+        @Test
+        public void should_SortBooksByAuthor() {
+            when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6));
 
-        final List<BookRepresentation> listOfBookRepresentations = Arrays.asList(bookRepresentation5, bookRepresentation6);
+            List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByAuthor();
 
-        List<BookRepresentation> result = libraryService.checkSignaturesAndAddBooks(listOfBookRepresentations);
+            assertAll(
+                    () -> assertEquals(bookEntity7.getAuthor(), sortedLibraryBookRepresentations.get(0).getAuthor()),
+                    () -> assertEquals(bookEntity2.getAuthor(), sortedLibraryBookRepresentations.get(1).getAuthor()),
+                    () -> assertEquals(bookEntity.getAuthor(), sortedLibraryBookRepresentations.get(2).getAuthor()),
+                    () -> assertEquals(bookEntity6.getAuthor(), sortedLibraryBookRepresentations.get(3).getAuthor()),
+                    () -> assertEquals(bookEntity5.getAuthor(), sortedLibraryBookRepresentations.get(4).getAuthor())
+            );
+        }
 
-        assertAll(
-                () -> assertEquals(2, libraryService.getAllBooks().size()),
-                () -> assertEquals(result.get(0).getSignature(), bookEntity5.getSignature()),
-                () -> assertEquals(result.get(1).getSignature(), bookEntity6.getSignature())
-        );
+        @Test
+        public void should_SortBooksByTitle() {
+            when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6));
+
+            List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByTitle();
+
+            assertAll(
+                    () -> assertEquals(bookEntity6.getTitle(), sortedLibraryBookRepresentations.get(0).getTitle()),
+                    () -> assertEquals(bookEntity.getTitle(), sortedLibraryBookRepresentations.get(1).getTitle()),
+                    () -> assertEquals(bookEntity2.getTitle(), sortedLibraryBookRepresentations.get(2).getTitle()),
+                    () -> assertEquals(bookEntity5.getTitle(), sortedLibraryBookRepresentations.get(3).getTitle()),
+                    () -> assertEquals(bookEntity7.getTitle(), sortedLibraryBookRepresentations.get(4).getTitle())
+            );
+        }
+
+        @Test
+        public void should_SortBooksByScoreAscending() {
+            when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6, bookEntity3));
+
+            List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByScoreAscending();
+
+            assertAll(
+                    () -> assertEquals(0.0, sortedLibraryBookRepresentations.get(0).getScore()),
+                    () -> assertEquals(2.0, sortedLibraryBookRepresentations.get(1).getScore()),
+                    () -> assertEquals(3.0, sortedLibraryBookRepresentations.get(2).getScore()),
+                    () -> assertEquals(3.5, sortedLibraryBookRepresentations.get(3).getScore()),
+                    () -> assertEquals(4.5, sortedLibraryBookRepresentations.get(4).getScore()),
+                    () -> assertEquals(5.0, sortedLibraryBookRepresentations.get(5).getScore())
+            );
+        }
+
+        @Test
+        public void should_SortBooksByScoreDescending() {
+            when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6, bookEntity3));
+
+            List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByScoreDescending();
+
+            assertAll(
+                    () -> assertEquals(5.0, sortedLibraryBookRepresentations.get(0).getScore()),
+                    () -> assertEquals(4.5, sortedLibraryBookRepresentations.get(1).getScore()),
+                    () -> assertEquals(3.5, sortedLibraryBookRepresentations.get(2).getScore()),
+                    () -> assertEquals(3.0, sortedLibraryBookRepresentations.get(3).getScore()),
+                    () -> assertEquals(2.0, sortedLibraryBookRepresentations.get(4).getScore()),
+                    () -> assertEquals(0.0, sortedLibraryBookRepresentations.get(5).getScore())
+            );
+        }
+
     }
 
-    @Test
-    public void removeBookFromLibrary() {
-        when(bookRepository.saveCustomized(bookEntity)).thenReturn(bookEntity);
-        when(bookRepository.saveCustomized(bookEntity2)).thenReturn(bookEntity2);
-        when(bookRepository.findById(1)).thenReturn(bookEntity);
-        when(bookRepository.findAll()).thenReturn(Collections.singletonList(bookEntity2));
+    @Nested
+    class ExceptionTests {
 
-        libraryService.checkIdAndRemoveBook(1);
-        List<BookRepresentation> bookRepresentations = libraryService.getAllBooks();
+        @Test
+        public void should_ThrowExceptionOnGettingByGenre_When_GenreDoesNotExist() {
+            NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
+                    libraryService.getBooksByGenre("fantasyyy"));
+            assertEquals("No genre fantasyyy in a library.", exception.getMessage());
+        }
 
-        assertAll(
-                () -> assertEquals(1, bookRepresentations.size()),
-                () -> assertTrue(bookRepresentations.stream().noneMatch(book -> book.getTitle().equals("LOTR")))
-        );
-    }
+        @Test
+        public void should_ThrowExceptionOnAddingDuplicateBookToLibrary_When_BookAlreadyExists() {
+            when(bookRepository.findBySignature("F01")).thenReturn(bookEntity);
 
-    @Test
-    public void removeNonExistingBookFromLibrary() {
-        when(bookRepository.saveCustomized(bookEntity)).thenReturn(bookEntity);
-        when(bookRepository.saveCustomized(bookEntity2)).thenReturn(bookEntity2);
-        when(bookRepository.findById(3)).thenThrow(new NoSuchElementException("No requested book with id=8 in a library."));
+            Exception exception = assertThrows(Exception.class, () -> libraryService.checkSignatureAndAddBook(bookRepresentation));
 
+            assertEquals("Book with provided signature F01 already in a library.", exception.getMessage());
+        }
 
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
-                libraryService.checkIdAndRemoveBook(3));
-        assertEquals("No requested book with id=8 in a library.", exception.getMessage());
-    }
+        @Test
+        public void should_ThrowExceptionOnRemoving_When_BookDoesNotExist() {
+            when(bookRepository.findById(3)).thenThrow(new NoSuchElementException("No requested book with id=8 in a library."));
 
-    @Test
-    public void updateBook() {
-        when(bookRepository.save(bookEntity)).thenReturn(bookEntity);
-        when(bookRepository.findById(1)).thenReturn(bookEntity);
+            NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
+                    libraryService.checkIdAndRemoveBook(3));
 
-        BookRepresentation updatedBookRepresentation = libraryService.checkIdAndUpdateBook(1, bookRepresentation2);
-
-        assertEquals("Fellowship of the ring", updatedBookRepresentation.getTitle());
-    }
-
-    @Test
-    public void updateNonExistingBook() {
-        when(bookRepository.findById(5)).thenReturn(null);
-
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
-                libraryService.checkIdAndUpdateBook(5, bookRepresentation5));
-        assertEquals("No requested book with id=5 in a library.", exception.getMessage());
-    }
-
-    @Test
-    public void getBooksByGenre() {
-        when(bookRepository.findAllByGenre("fantasy")).thenReturn(Arrays.asList(bookEntity2, bookEntity3));
-
-        List<BookRepresentation> fantasyBookRepresentations = libraryService.getBooksByGenre("fantasy");
-
-        assertAll(
-                () -> assertEquals(2, fantasyBookRepresentations.size()),
-                () -> fantasyBookRepresentations.forEach(book -> assertEquals("fantasy", book.getGenre().getGenreName()))
-        );
-    }
-
-    @Test
-    public void getBooksByGenreNonExisting() {
-        when(bookRepository.findAllByGenre("fantasyyy")).thenThrow(new NoSuchElementException("No genre fantasyyy in a library."));
-
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
-                libraryService.getBooksByGenre("fantasyyy"));
-        assertEquals("No genre fantasyyy in a library.", exception.getMessage());
-    }
-
-    @Test
-    public void getBooksByTitle() {
-        when(bookRepository.findAllByTitle("Witcher")).thenReturn(Arrays.asList(bookEntity3, bookEntity7));
-
-        List<BookRepresentation> bookRepresentation = libraryService.getBookByTitle("Witcher");
-
-        assertAll(
-                () -> assertEquals(bookEntity3.getTitle(), bookRepresentation.get(0).getTitle()),
-                () -> assertEquals(bookEntity7.getTitle(), bookRepresentation.get(1).getTitle())
-        );
-    }
-
-    @Test
-    public void getBooksByTitleNotFound() {
-        when(bookRepository.findAllByTitle("unknown")).thenReturn(Collections.emptyList());
-
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
-                libraryService.getBookByTitle("unknown"));
-        assertEquals("No requested book with title unknown in a library.", exception.getMessage());
-    }
-
-    @Test
-    public void sortBooksByAuthor() {
-        when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6));
-
-        List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByAuthor();
-
-        assertAll(
-                () -> assertEquals(bookEntity7.getAuthor(), sortedLibraryBookRepresentations.get(0).getAuthor()),
-                () -> assertEquals(bookEntity2.getAuthor(), sortedLibraryBookRepresentations.get(1).getAuthor()),
-                () -> assertEquals(bookEntity.getAuthor(), sortedLibraryBookRepresentations.get(2).getAuthor()),
-                () -> assertEquals(bookEntity6.getAuthor(), sortedLibraryBookRepresentations.get(3).getAuthor()),
-                () -> assertEquals(bookEntity5.getAuthor(), sortedLibraryBookRepresentations.get(4).getAuthor())
-        );
-    }
-
-    @Test
-    public void sortBooksByTitle() {
-        when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6));
-
-        List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByTitle();
-
-        assertAll(
-                () -> assertEquals(bookEntity6.getTitle(), sortedLibraryBookRepresentations.get(0).getTitle()),
-                () -> assertEquals(bookEntity.getTitle(), sortedLibraryBookRepresentations.get(1).getTitle()),
-                () -> assertEquals(bookEntity2.getTitle(), sortedLibraryBookRepresentations.get(2).getTitle()),
-                () -> assertEquals(bookEntity5.getTitle(), sortedLibraryBookRepresentations.get(3).getTitle()),
-                () -> assertEquals(bookEntity7.getTitle(), sortedLibraryBookRepresentations.get(4).getTitle())
-        );
-    }
-
-    @Test
-    public void sortBooksByScoreAscending() {
-        when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6, bookEntity3));
-
-        List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByScoreAscending();
-
-        assertAll(
-                () -> assertEquals(0.0, sortedLibraryBookRepresentations.get(0).getScore()),
-                () -> assertEquals(2.0, sortedLibraryBookRepresentations.get(1).getScore()),
-                () -> assertEquals(3.0, sortedLibraryBookRepresentations.get(2).getScore()),
-                () -> assertEquals(3.5, sortedLibraryBookRepresentations.get(3).getScore()),
-                () -> assertEquals(4.5, sortedLibraryBookRepresentations.get(4).getScore()),
-                () -> assertEquals(5.0, sortedLibraryBookRepresentations.get(5).getScore())
-        );
-    }
-
-    @Test
-    public void sortBooksByScoreDescending() {
-        when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6, bookEntity3));
-
-        List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.sortBooksByScoreDescending();
-
-        assertAll(
-                () -> assertEquals(5.0, sortedLibraryBookRepresentations.get(0).getScore()),
-                () -> assertEquals(4.5, sortedLibraryBookRepresentations.get(1).getScore()),
-                () -> assertEquals(3.5, sortedLibraryBookRepresentations.get(2).getScore()),
-                () -> assertEquals(3.0, sortedLibraryBookRepresentations.get(3).getScore()),
-                () -> assertEquals(2.0, sortedLibraryBookRepresentations.get(4).getScore()),
-                () -> assertEquals(0.0, sortedLibraryBookRepresentations.get(5).getScore())
-        );
-    }
-
-    @Test
-    public void getMostPopularBook() throws Exception {
-        when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6, bookEntity3));
-
-        List<BookRepresentation> mostPopularBookRepresentation = libraryService.getMostPopularBook();
-
-        assertEquals(bookEntity2.getTitle(), mostPopularBookRepresentation.get(0).getTitle());
-        assertEquals(bookEntity7.getTitle(), mostPopularBookRepresentation.get(1).getTitle());
-    }
-
-    @Test
-    public void getMostPopularBookNoVotes() {
-        when(bookRepository.findAll()).thenReturn(Collections.singletonList(bookEntity));
-
-        Exception exception = assertThrows(Exception.class, () ->
-                libraryService.getMostPopularBook());
-        assertEquals("Couldn't get the most popular book. No votes yet.", exception.getMessage());
-    }
-
-    @Test
-    public void getMostPopularByGenre() {
-        when(bookRepository.findAllByGenre("fantasy")).thenReturn(Arrays.asList(bookEntity2, bookEntity7, bookEntity3));
-
-        List<BookRepresentation> sortedLibraryBookRepresentations = libraryService.getSortedScoreByGenre("fantasy");
-
-        assertAll(
-                () -> assertEquals(3, sortedLibraryBookRepresentations.size()),
-                () -> assertEquals(bookEntity2.getTitle(), sortedLibraryBookRepresentations.get(0).getTitle()),
-                () -> assertEquals(5.0, sortedLibraryBookRepresentations.get(0).getScore()),
-                () -> assertEquals(bookEntity3.getTitle(), sortedLibraryBookRepresentations.get(1).getTitle()),
-                () -> assertEquals(3.0, sortedLibraryBookRepresentations.get(1).getScore()),
-                () -> assertEquals(bookEntity7.getTitle(), sortedLibraryBookRepresentations.get(2).getTitle()),
-                () -> assertEquals(0.0, sortedLibraryBookRepresentations.get(2).getScore())
-        );
-    }
-
-    @Test
-    public void getHighestRatedBook() throws Exception {
-        when(bookRepository.findAll()).thenReturn(Arrays.asList(bookEntity, bookEntity2, bookEntity7, bookEntity5, bookEntity6, bookEntity3));
-
-        List<BookRepresentation> highestRatedBookRepresentations = libraryService.getHighestRatedBook();
-
-        assertAll(
-                () -> assertEquals(5.0, highestRatedBookRepresentations.get(0).getScore()),
-                () -> assertEquals(bookEntity2.getTitle(), highestRatedBookRepresentations.get(0).getTitle())
-        );
-    }
-
-    @Test
-    public void getHighestRatedBookAllRate0() {
-        when(bookRepository.findAll()).thenReturn(Collections.singletonList(bookEntity7));
-
-        Exception exception = assertThrows(Exception.class, () ->
-                libraryService.getHighestRatedBook());
-        assertEquals("Couldn't get the highest rated book. All rate to 0.0", exception.getMessage());
-    }
-
-    @Test
-    public void rateBook() {
-        when(bookRepository.findById(1)).thenReturn(bookEntity);
-        when(bookRepository.save(bookEntity)).thenReturn(bookEntity);
-
-        BookRepresentation bookRepresentation = libraryService.checkIdAndRateABook(1, 4);
-        libraryService.checkIdAndRateABook(1, 5);
+            assertEquals("No requested book with id=8 in a library.", exception.getMessage());
+        }
 
 
-        assertAll(
-                () -> assertEquals(1, bookRepresentation.getScoreRegistry().size()),
-                () -> assertEquals(4.0, bookRepresentation.getScore())
-        );
+        @Test
+        public void should_ThrowExceptionOnUpdating_When_BookIdDoesNotExist() {
+            when(bookRepository.findById(5)).thenReturn(null);
+
+            NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
+                    libraryService.checkIdAndUpdateBook(5, bookRepresentation5));
+
+            assertEquals("No requested book with id=5 in a library.", exception.getMessage());
+        }
+
+        @Test
+        public void should_ThrowExceptionOnGettingByTitle_When_TitleDoesNotExist() {
+            when(bookRepository.findAllByTitle("unknown")).thenReturn(Collections.emptyList());
+
+            NoSuchElementException exception = assertThrows(NoSuchElementException.class, () ->
+                    libraryService.getBookByTitle("unknown"));
+
+            assertEquals("No requested book with title unknown in a library.", exception.getMessage());
+        }
+
+        @Test
+        public void should_ThrowExceptionOnHighestRatedBook_When_NoneIsRated() {
+            when(bookRepository.findAll()).thenReturn(Collections.singletonList(bookEntity7));
+
+            Exception exception = assertThrows(Exception.class, () ->
+                    libraryService.getHighestRatedBook());
+
+            assertEquals("Couldn't get the highest rated book. All rate to 0.0", exception.getMessage());
+        }
+
+        @Test
+        public void should_ThrowExceptionMostPopularBook_When_ThereIsAny() {
+            when(bookRepository.findAll()).thenReturn(Collections.singletonList(bookEntity));
+
+            Exception exception = assertThrows(Exception.class, () ->
+                    libraryService.getMostPopularBook());
+
+            assertEquals("Couldn't get the most popular book. No votes yet.", exception.getMessage());
+        }
     }
 }

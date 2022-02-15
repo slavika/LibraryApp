@@ -13,7 +13,6 @@ public interface BookMapper {
 
     BookMapper INSTANCE = Mappers.getMapper(BookMapper.class);
 
-    //    @Mapping(target = "id", ignore = true)
     @Mapping(source = "genre", target = "genre", qualifiedByName = "enumToStringMapper")
     BookEntity bookRepToEntity(BookRepresentation bookRepresentation);
 

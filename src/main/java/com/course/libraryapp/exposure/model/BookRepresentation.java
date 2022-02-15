@@ -5,13 +5,9 @@ import lombok.*;
 import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
 public class BookRepresentation {
-    private static final AtomicInteger count = new AtomicInteger(0);
-
     private int id;
     @NotBlank(message = "Signature cannot be empty")
     private String signature;
@@ -35,18 +31,9 @@ public class BookRepresentation {
         this.title = title;
         this.author = author;
         this.description = description;
-        this.genre = checkIfGenreIsValid(genre);
+        this.genre = GenreEnumRepresentation.of(genre);
         this.signature = signature;
         this.score = 0.0;
         this.scoreRegistry = new ArrayList<>();
-    }
-
-    // TODO dodac sprawdzenie czy gatunek istnieje
-    private GenreEnumRepresentation checkIfGenreIsValid(String genre) {
-        try {
-            return GenreEnumRepresentation.of(genre);
-        } catch (Exception ex) {
-            throw new NoSuchElementException("blad");
-        }
     }
 }

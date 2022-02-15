@@ -16,23 +16,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-
 @RestControllerAdvice
 class ErrorController extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers,
                                                                   HttpStatus status, WebRequest request) {
-        return this.createResponseEntity(List.of(Objects.requireNonNull(ex.getMessage())), request);
+        return createResponseEntity(List.of(Objects.requireNonNull(ex.getMessage())), request);
     }
-
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers,
                                                                   HttpStatus status, WebRequest request) {
         List<ObjectError> exceptions = ex.getBindingResult().getAllErrors();
         List<String> errorMessages = exceptions.stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.toList());
-        return this.createResponseEntity(errorMessages, request);
+        return createResponseEntity(errorMessages, request);
     }
 
     private ResponseEntity<Object> createResponseEntity(List<String> errorMessages, WebRequest request) {
